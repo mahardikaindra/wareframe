@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/static-components */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 'use client';
 import { useState } from 'react';
 import { 
@@ -27,16 +29,49 @@ import {
   Inbox,
   Shield} from 'lucide-react';
 
+  interface BusinessItem {
+  id: number;
+  name: string;
+  entityType: string;
+  hasEmail: string;
+  email?: string;
+  emailPassword?: string;
+  address: string;
+  kbliCount: number;
+  price: number;
+  files: { name: string; size: string }[];
+}
+
+interface BusinessSubmission {
+  name: string;
+  entityType: string;
+  hasEmail: string;
+  email: string;
+  emailPassword: string;
+  address: string;
+  kbliCount: number;
+  price: number;
+  files: { name: string; size: string }[];
+}
+
+interface ValidationErrors {
+  name?: string;
+  email?: string;
+  emailPassword?: string;
+  address?: string;
+  kbliCount?: string;
+}
+
 // --- Helper Components ---
 
-const StatusBadge = ({ status }) => {
+const StatusBadge = ({ status }: { status: string }) => {
   const styles = {
     'Selesai': 'bg-[#dad7cd] text-[#344e41] border-[#a3b18a]',
     'Diproses': 'bg-amber-50 text-amber-700 border-amber-100',
     'Ditolak': 'bg-red-50 text-red-600 border-red-100',
     'default': 'bg-gray-50 text-gray-500 border-gray-100'
   };
-  const style = styles[status] || styles.default;
+  const style = styles[status as keyof typeof styles] || styles.default;
   return (
     <span className={`text-[9px] font-black uppercase tracking-widest px-2.5 py-1 rounded-md border ${style}`}>
       {status}
@@ -50,11 +85,11 @@ const App = () => {
   const [submissionType, setSubmissionType] = useState(''); 
   const [showSuccess, setShowSuccess] = useState(false);
   const [historyTab, setHistoryTab] = useState('Semua');
-  const [selectedSubmission, setSelectedSubmission] = useState(null);
+  const [selectedSubmission, setSelectedSubmission] = useState<any>(null);
 
   // State untuk Multiple Submission
-  const [businesses, setBusinesses] = useState([]);
-  const [currentBusiness, setCurrentBusiness] = useState({ 
+  const [businesses, setBusinesses] = useState<BusinessItem[]>([]);
+  const [currentBusiness, setCurrentBusiness] = useState<BusinessSubmission>({ 
     name: '', 
     entityType: 'PT',
     hasEmail: 'Tidak', // Default: Belum punya
@@ -97,11 +132,11 @@ const App = () => {
   ];
 
   // Logika Perhitungan Biaya KBLI (100rb per 8 KBLI)
-  const calculatePrice = (count) => {
+  const calculatePrice = (count: number) => {
     return Math.ceil(count / 8) * 100000;
   };
 
-  const handleKBLIChange = (val) => {
+  const handleKBLIChange = (val: string) => {
     const count = parseInt(val) || 0;
     setCurrentBusiness({ 
       ...currentBusiness, 
@@ -121,7 +156,7 @@ const App = () => {
     }
   };
 
-  const removeFile = (fileName) => {
+  const removeFile = (fileName: string) => {
     setCurrentBusiness({
       ...currentBusiness,
       files: currentBusiness.files.filter(f => f.name !== fileName)
@@ -147,24 +182,24 @@ const App = () => {
     }
   };
 
-  const removeBusiness = (id) => {
+  const removeBusiness = (id: number) => {
     setBusinesses(businesses.filter(b => b.id !== id));
   };
 
   const totalPrice = businesses.reduce((sum, item) => sum + item.price, 0);
 
-  const navigate = (target) => {
+  const navigate = (target: string) => {
     setPage(target);
     window.scrollTo(0, 0);
   };
 
-  const handleSubmissionStart = (type) => {
+  const handleSubmissionStart = (type: string) => {
     setSubmissionType(type);
     setBusinesses([]);
     setPage('submission');
   };
 
-  const openHistoryDetail = (item) => {
+  const openHistoryDetail = (item: any) => {
     setSelectedSubmission(item);
     setIsPaid(item.isPaid);
     setPage('history-detail');
@@ -186,7 +221,7 @@ const App = () => {
 
   // --- UI Components ---
 
-  const Header = ({ title, showBack = false, backTarget = 'home' }) => (
+  const Header = ({ title, showBack = false, backTarget = 'home' } : {title: string; showBack?: boolean; backTarget?: string;}) => (
     <div className="bg-[#344e41] text-white h-16 px-5 flex items-center sticky top-0 z-40 shadow-sm w-full">
       {showBack && (
         <button onClick={() => navigate(backTarget)} className="mr-3 p-2 -ml-2 active:bg-[#3a5a40] rounded-full transition-colors">
@@ -216,7 +251,7 @@ const App = () => {
     </div>
   );
 
-  const InputField = ({ icon: Icon, label, placeholder, value, onChange, type = "text", isTextArea = false, readOnly = false }) => {
+  const InputField = ({ icon: Icon, label, placeholder, value, onChange, type = "text", isTextArea = false, readOnly = false }: { icon?: React.ElementType, label: string, placeholder: string, value?: string | number, onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void, type?: string, isTextArea?: boolean, readOnly?: boolean }) => {
     const inputClasses = `block w-full ${Icon && !isTextArea ? 'pl-11' : 'pl-5'} pr-5 py-4 rounded-xl border border-gray-200 outline-none transition-all focus:ring-2 focus:ring-[#344e41]/10 focus:border-[#344e41] ${readOnly ? 'bg-gray-50 text-gray-500 border-gray-100' : 'bg-white text-gray-900 shadow-sm'}`;
     
     const commonProps = {
@@ -239,7 +274,7 @@ const App = () => {
           {isTextArea ? (
             <textarea {...commonProps} rows={3} className={`${inputClasses} resize-none`} />
           ) : (
-            <input type={type} {...commonProps} />
+            <input type={type} {...commonProps} value={value} />
           )}
         </div>
       </div>
@@ -586,7 +621,7 @@ const App = () => {
           <section className="text-left">
             <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] mb-4 ml-2">Detail Paket Bisnis</h3>
             <div className="space-y-4">
-              {item.items?.map(biz => (
+              {item.items?.map((biz: any) => (
                 <div key={biz.id} className="bg-white p-6 rounded-2xl border border-gray-100 shadow-sm flex items-center justify-between group">
                     <div className="flex gap-4 items-center">
                        <div className="w-12 h-12 bg-gray-50 text-gray-400 rounded-xl flex items-center justify-center group-hover:bg-[#dad7cd]/40 group-hover:text-[#344e41] transition-all"><Building size={24}/></div>
@@ -618,7 +653,7 @@ const App = () => {
                
                <div className="bg-white p-7 rounded-2xl border border-gray-50 shadow-sm space-y-6 text-left">
                   <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.2em] border-b pb-4">Download Dokumen Resmi</h3>
-                  {item.result.files.map((file, idx) => (
+                  {item.result.files.map((file: any, idx: number) => (
                     <div key={idx} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-100 hover:border-[#dad7cd] transition-all group">
                       <div className="flex items-center gap-4 text-left">
                         <div className="w-11 h-11 bg-white p-2.5 rounded-xl flex items-center justify-center text-[#344e41] border border-gray-100 shadow-sm group-hover:bg-[#344e41] group-hover:text-white transition-all"><File size={22} /></div>
@@ -664,7 +699,7 @@ const App = () => {
           {page === 'history-detail' && <HistoryDetailPage />}
           {page === 'profile' && (
             <div className="bg-gray-50 min-h-full pb-20">
-               <Header title="Akun Notaris" />
+               <Header title="Akun Notaris" showBack={false} backTarget='' />
                <div className="bg-white p-8 flex flex-col items-center border-b text-center mb-6">
                   <div className="w-28 h-28 bg-[#dad7cd]/40 rounded-2xl flex items-center justify-center mb-5 border-4 border-white shadow-xl relative">
                     <User className="text-[#344e41]" size={56} />
@@ -692,14 +727,14 @@ const App = () => {
             <div className="bg-gray-50 min-h-full pb-20 text-left">
                <Header title="Update Profil" showBack={true} backTarget="profile" />
                <div className="p-6">
-                  <InputField label="Nama Lengkap" value="Budi Santoso, S.H., M.Kn." />
+                  <InputField label="Nama Lengkap" value="Budi Santoso, S.H., M.Kn." placeholder={''} />
                   <div className="grid grid-cols-2 gap-4">
-                    <InputField label="NIK" value="3273012345678901" readOnly={true} />
-                    <InputField label="No. SK" value="SK.123/AHU/2023" />
+                    <InputField label="NIK" value="3273012345678901" readOnly={true} placeholder={''} />
+                    <InputField label="No. SK" value="SK.123/AHU/2023" placeholder={''} />
                   </div>
-                  <InputField label="Wilayah Kedudukan" value="Kota Bandung" />
-                  <InputField label="Email Kantor" value="notaris.budi@email.com" />
-                  <InputField label="Alamat Kantor" isTextArea={true} value="Jl. Gatot Subroto No. 123, Bandung" />
+                  <InputField label="Wilayah Kedudukan" value="Kota Bandung" placeholder={''} />
+                  <InputField label="Email Kantor" value="notaris.budi@email.com" placeholder={''} />
+                  <InputField label="Alamat Kantor" isTextArea={true} value="Jl. Gatot Subroto No. 123, Bandung" placeholder={''} />
                   <button onClick={() => {setShowSuccess(true); setTimeout(() => {setShowSuccess(false); navigate('profile');}, 1500);}} className="w-full h-16 bg-[#344e41] text-white rounded-xl font-black text-xs uppercase tracking-[0.3em] mt-6 shadow-2xl shadow-[#344e41]/10 active:scale-95 transition-all">Simpan Profil</button>
                </div>
             </div>
